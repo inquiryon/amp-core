@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inquiryon-amp-core"
+version = "0.0.1"
+description = "AMP governance core: policy schema, deterministic evaluation, decision-provider contracts (experimental v0)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+schema = ["jsonschema>=4.0"]
+dev = ["pytest>=7", "jsonschema>=4.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+amp_core = ["contracts/schemas/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

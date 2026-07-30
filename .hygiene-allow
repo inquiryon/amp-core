@@ -1,0 +1,4 @@
+# Reviewed hygiene exceptions (see oss-release/hygiene/check_release_hygiene.sh)
+# The architecture test must name forbidden imports in order to ban them.
+H6 tests/test_architecture_rules.py
+H4 scripts/check_release_hygiene.sh

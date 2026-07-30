@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://amp.invalid/contracts/v0.json",
+  "title": "AMP governance contracts v0 (EXPERIMENTAL — subject to change)",
+  "$defs": {
+    "Identifier": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"},
+    "Timestamp": {"type": "string", "format": "date-time", "description": "ISO-8601 UTC"},
+    "Scope": {"type": ["string", "null"], "maxLength": 128, "description": "Opaque execution scope. No SaaS organization semantics."},
+
+    "Criterion": {
+      "type": "object",
+      "required": ["criterion_id", "evaluator"],
+      "properties": {
+        "criterion_id": {"$ref": "#/$defs/Identifier"},
+        "tool": {"type": "string", "default": "*"},
+        "action": {"type": "string", "default": "*"},
+        "hardness": {"enum": ["hard", "soft"], "default": "hard"},
+        "condition_semantics": {"enum": ["block_when", "allow_when"], "default": "block_when"},
+        "text": {"type": "string"},
+        "description": {"type": "string"},
+        "evaluator": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["compute", "llm", "hybrid", "input"], "default": "compute"},
+            "formula": {"type": "string", "maxLength": 2000},
+            "prompt": {"type": "string"},
+            "input_key": {"type": "string"},
+            "fallback_result": {"type": "boolean"},
+            "compute": {"type": "object", "properties": {"formula": {"type": "string", "maxLength": 2000}, "fallback_result": {"type": "boolean"}}},
+            "llm": {"type": "object", "properties": {"prompt": {"type": "string"}, "fallback_result": {"type": "boolean"}}}
+          }
+        }
+      }
+    },
+
+    "Policy": {
+      "type": "object",
+      "required": ["action_governance"],
+      "properties": {
+        "policy_id": {"$ref": "#/$defs/Identifier"},
+        "schema_version": {"const": "v0"},
+        "allow_unknown_tools": {"type": "boolean", "default": false},
+        "action_governance": {
+          "type": "object",
+          "properties": {
+            "force_human_approval": {"type": "boolean", "default": false},
+            "criteria": {"type": "array", "items": {"$ref": "#/$defs/Criterion"}}
+          }
+        }
+      }
+    },
+
+    "PolicyPackManifest": {
+      "type": "object",
+      "required": ["name", "version", "policies"],
+      "properties": {
+        "name": {"$ref": "#/$defs/Identifier"},
+        "version": {"type": "string"},
+        "description": {"type": "string"},
+        "license": {"type": "string"},
+        "policies": {"type": "array", "items": {"type": "string"}, "description": "Relative paths to policy JSON files"}
+      }
+    },
+
+    "EvaluationRequest": {
+      "type": "object",
+      "required": ["request_id", "tool", "action", "params"],
+      "properties": {
+        "request_id": {"$ref": "#/$defs/Identifier"},
+        "tool": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "params": {"type": "object"},
+        "criteria_inputs": {"type": "object", "description": "Signal keys; values coerced to booleans"},
+        "scope": {"$ref": "#/$defs/Scope"},
+        "requested_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+
+    "CriterionResult": {
+      "type": "object",
+      "required": ["criterion_id", "hardness", "evaluator_type", "condition_met", "triggered"],
+      "properties": {
+        "criterion_id": {"$ref": "#/$defs/Identifier"},
+        "hardness": {"enum": ["hard", "soft"]},
+        "evaluator_type": {"enum": ["compute", "llm", "hybrid", "input"]},
+        "status": {"enum": ["met", "not_met"]},
+        "condition_semantics": {"enum": ["block_when", "allow_when"]},
+        "condition_met": {"type": "boolean"},
+        "triggered": {"type": "boolean"},
+        "reason": {"type": "string"},
+        "trigger_reason": {"type": "string"}
+      }
+    },
+
+    "EvaluationDecision": {
+      "type": "object",
+      "required": ["request_id", "decision", "reason"],
+      "properties": {
+        "request_id": {"$ref": "#/$defs/Identifier"},
+        "decision": {"enum": ["allow", "deny", "require_human"], "description": "v0: deterministic evaluation emits allow|require_human; deny is reserved for providers/policies that support it"},
+        "reason": {"type": "string", "description": "Stable machine-readable reason code"},
+        "triggered_criteria": {"type": "array", "items": {"$ref": "#/$defs/Identifier"}},
+        "soft_triggered": {"type": "array", "items": {"$ref": "#/$defs/Identifier"}},
+        "criteria_results": {"type": "array", "items": {"$ref": "#/$defs/CriterionResult"}},
+        "provider": {"type": "object", "properties": {"name": {"type": "string"}, "version": {"type": "string"}}},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "decided_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+
+    "HITLRequest": {
+      "type": "object",
+      "required": ["hitl_id", "request_id", "tool", "action", "params", "status"],
+      "properties": {
+        "hitl_id": {"$ref": "#/$defs/Identifier"},
+        "request_id": {"$ref": "#/$defs/Identifier"},
+        "tool": {"type": "string"},
+        "action": {"type": "string"},
+        "params": {"type": "object"},
+        "reason": {"type": "string"},
+        "triggered_criteria": {"type": "array", "items": {"$ref": "#/$defs/Identifier"}, "description": "Criterion ids; full results live in the evaluation audit event (payload minimization)"},
+        "status": {"enum": ["pending", "approved", "rejected", "modified", "resumed", "closed", "expired", "cancelled"]},
+        "scope": {"$ref": "#/$defs/Scope"},
+        "created_at": {"$ref": "#/$defs/Timestamp"},
+        "expires_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+      }
+    },
+
+    "HITLDecision": {
+      "type": "object",
+      "required": ["hitl_id", "decision", "decided_by", "decided_at"],
+      "properties": {
+        "hitl_id": {"$ref": "#/$defs/Identifier"},
+        "decision": {"enum": ["approve", "reject", "modify"]},
+        "decided_by": {"type": "string", "description": "Opaque principal id"},
+        "decided_at": {"$ref": "#/$defs/Timestamp"},
+        "note": {"type": "string", "maxLength": 4000},
+        "modified_params": {"type": "object", "description": "Required when decision=modify; replacement params, schema-validated and re-evaluated before execution"}
+      },
+      "if": {"properties": {"decision": {"const": "modify"}}},
+      "then": {"required": ["hitl_id", "decision", "decided_by", "decided_at", "modified_params"]}
+    },
+
+    "AuditEvent": {
+      "type": "object",
+      "required": ["event_id", "event_type", "occurred_at", "request_id", "actor"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Identifier"},
+        "event_type": {"type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"},
+        "occurred_at": {"$ref": "#/$defs/Timestamp"},
+        "request_id": {"$ref": "#/$defs/Identifier"},
+        "actor": {"type": "string"},
+        "payload": {"type": "object"},
+        "scope": {"$ref": "#/$defs/Scope"},
+        "schema_version": {"const": "v0"}
+      }
+    },
+
+    "ErrorEnvelope": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+            "message": {"type": "string"},
+            "request_id": {"type": "string"},
+            "details": {"type": "object"}
+          }
+        }
+      }
+    },
+
+    "Page": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {"type": "array"},
+        "next_cursor": {"type": ["string", "null"], "description": "Opaque cursor; absent/null means last page"}
+      }
+    }
+  }
+}
