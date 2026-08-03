@@ -1,27 +1,21 @@
 """Decision-provider conformance (OSS-002): timeout, invalid output, safe
-fallback, and non-overridable policy outcomes."""
+fallback, and non-overridable policy outcomes.
+
+The fixed policy and request builder live in ``amp_core.conformance`` so a
+private Enterprise provider suite (OSS-008) can evaluate against the same
+fixture instead of redefining an equivalent one."""
 
 import time
 
 from amp_core import (
-    DecisionRequest,
     DecisionResult,
     HumanReviewProvider,
     StaticPolicyProvider,
     decide_with_safety,
-    run_eval_policy,
 )
+from amp_core.conformance import HARD_POLICY, make_request
 
-HARD_POLICY = {'action_governance': {'criteria': [{
-    'criterion_id': 'c-amount', 'tool': 'pay_invoice', 'action': '*',
-    'hardness': 'hard', 'evaluator': {'type': 'compute', 'formula': 'amount > 1000'}}]}}
-
-
-def make_request(params, timeout=5.0):
-    evaluation = run_eval_policy(HARD_POLICY, 'pay_invoice', 'submit', params)
-    return DecisionRequest(request_id='req-1', tool='pay_invoice', action='submit',
-                           params=params, policy_evaluation=evaluation,
-                           timeout_seconds=timeout)
+assert HARD_POLICY  # re-exported for suites that want the raw policy too
 
 
 class AlwaysAllowProvider:

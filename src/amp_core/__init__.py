@@ -41,3 +41,7 @@ from .providers import (
 from .stores import FilePolicyStore, InMemoryPolicyStore, PolicyStore
 
 __version__ = '0.0.1'
+
+# `conformance` is intentionally not imported here (it is test-support, not
+# runtime code) — import it explicitly as `amp_core.conformance` in a
+# provider conformance suite.
