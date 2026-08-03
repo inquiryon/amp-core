@@ -11,8 +11,7 @@ import pytest
 
 from amp_core import run_eval_policy
 
-FIXTURES = os.path.join(os.path.dirname(__file__), '..', '..', 'oss-release',
-                        'phase-0', 'fixtures', 'eval_policy_cases.json')
+FIXTURES = os.path.join(os.path.dirname(__file__), 'fixtures', 'eval_policy_cases.json')
 
 with open(os.path.abspath(FIXTURES), encoding='utf-8') as f:
     SUITE = json.load(f)

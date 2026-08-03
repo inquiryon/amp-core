@@ -1,0 +1,220 @@
+{
+  "_meta": {
+    "purpose": "Phase-0 characterization fixtures for amp-core/tests/test_characterization_parity.py — proves amp-core's run_eval_policy reproduces the legacy _run_eval_policy in amp-backend/app.py. All policies, tools, params, and identifiers below are fictional (OSS-001 requires this); none are derived from production data.",
+    "constructed": "2026-08-03, from direct line-by-line comparison of amp-core/src/amp_core/evaluator.py against amp-backend/app.py's _run_eval_policy/_eval_single_criterion/_evaluate_policy_matching_criteria. Every expected value below was verified by actually running amp-core's real evaluator, not hand-derived assumption.",
+    "legacy_decision_spelling": "hitl (mapped to require_human by the test harness's LEGACY_TO_V0 dict — this file intentionally uses the legacy spelling so it also documents what changed and why)",
+    "no_llm_reaching_criterion_cases": "Deliberately excluded: any case whose evaluation path can reach app._eval_llm_criterion. This fixture is also consumed by amp-backend/tests/test_amp_core_adapter.py's differential test, which bridges to that real function on both the embedded and amp-core sides. In an environment with real LLM settings configured (true on at least one dev machine, 2026-08-03), that reaches live, non-deterministic inference and can diverge run to run — confirmed empirically (a pure 'llm'-type case flaked once in the initial version of this file, passed 3/3 on rerun, then removed rather than trusted). For the same reason, this file has no 'hybrid'-type case where compute is false — that also falls through to the LLM half. The only 'hybrid' case here has compute fire immediately, which returns before the LLM half is ever reached, and is fully deterministic regardless of environment. The compute-false/LLM-fallback behavior is real and documented (see evaluator.py's docstring) but isn't safely fixture-able as an automated cross-repo test given environment-dependent LLM availability."
+  },
+  "cases": [
+    {
+      "id": "force_human_approval_short_circuits_everything",
+      "policy": {"action_governance": {"force_human_approval": true, "criteria": []}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "echo hello"},
+      "expect": {"decision": "hitl", "reason": "force_human_approval", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "unknown_tool_denied_by_default",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "c1", "tool": "email", "action": "send",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "true"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "ls"},
+      "expect": {"decision": "hitl", "reason": "unknown_tool_not_allowed", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "unknown_tool_allowed_when_flagged",
+      "policy": {
+        "allow_unknown_tools": true,
+        "action_governance": {"criteria": [
+          {"criterion_id": "c1", "tool": "email", "action": "send",
+           "hardness": "hard", "evaluator": {"type": "compute", "formula": "true"}}
+        ]}
+      },
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "ls"},
+      "expect": {"decision": "allow", "reason": "no_matching_criteria_allowed", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "hard_compute_criterion_triggers_review",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "no_recursive_delete", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "text": "Block recursive filesystem deletes",
+         "evaluator": {"type": "compute", "formula": "'rm -rf' in command"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "rm -rf /tmp/fictional_build_cache"},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["no_recursive_delete"], "soft_ids": []}
+    },
+    {
+      "id": "hard_compute_criterion_not_triggered_allows",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "no_recursive_delete", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "'rm -rf' in command"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "ls -la"},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "soft_criterion_triggers_but_still_allows",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "large_output_advisory", "tool": "terminal", "action": "execute",
+         "hardness": "soft", "evaluator": {"type": "compute", "formula": "amount > 1000"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "cat fictional_report.csv", "amount": 5000},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered",
+                 "hard_ids": [], "soft_ids": ["large_output_advisory"]}
+    },
+    {
+      "id": "hard_and_soft_both_trigger",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "no_prod_db", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "lockdown('fictional_prod_db')"}},
+        {"criterion_id": "long_command_advisory", "tool": "terminal", "action": "execute",
+         "hardness": "soft", "evaluator": {"type": "compute", "formula": "len(command) > 20"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "psql fictional_prod_db/reports --dump"},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["no_prod_db"], "soft_ids": ["long_command_advisory"]}
+    },
+    {
+      "id": "allow_when_semantics_inverts_trigger",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "amount_under_threshold", "tool": "payment", "action": "transfer",
+         "hardness": "hard", "condition_semantics": "allow_when",
+         "text": "Only auto-approve transfers under the fictional threshold",
+         "evaluator": {"type": "compute", "formula": "amount < 100"}}
+      ]}},
+      "tool": "payment",
+      "action": "transfer",
+      "params": {"amount": 500},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["amount_under_threshold"], "soft_ids": []}
+    },
+    {
+      "id": "allow_when_semantics_does_not_trigger_when_condition_met",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "amount_under_threshold", "tool": "payment", "action": "transfer",
+         "hardness": "hard", "condition_semantics": "allow_when",
+         "evaluator": {"type": "compute", "formula": "amount < 100"}}
+      ]}},
+      "tool": "payment",
+      "action": "transfer",
+      "params": {"amount": 25},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "wildcard_tool_and_action_matches_everything",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "global_secrets_guard", "tool": "*", "action": "*",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "lockdown('fictional_secrets')"}}
+      ]}},
+      "tool": "email",
+      "action": "send",
+      "params": {"recipient": "someone@example.invalid", "subject": "re: fictional_secrets/rotation.txt"},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "lockdown_helper_blocks_protected_folder_via_path",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "no_secrets_folder", "tool": "file_write", "action": "write",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "lockdown('fictional_secrets')"}}
+      ]}},
+      "tool": "file_write",
+      "action": "write",
+      "params": {"path": "/repo/config/fictional_secrets/rotation.txt"},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["no_secrets_folder"], "soft_ids": []}
+    },
+    {
+      "id": "get_helper_safe_optional_field_access_absent_field",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "flagged_by_upstream", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "get('upstream_flag', false)"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "ls"},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "input_criterion_true_from_criteria_inputs_triggers",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "flagged_by_classifier", "tool": "email", "action": "send",
+         "hardness": "hard", "evaluator": {"type": "input", "input_key": "classifier_flag"}}
+      ]}},
+      "tool": "email",
+      "action": "send",
+      "params": {"recipient": "someone@example.invalid"},
+      "criteria_inputs": {"classifier_flag": true},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["flagged_by_classifier"], "soft_ids": []}
+    },
+    {
+      "id": "input_criterion_missing_hard_fails_closed",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "flagged_by_classifier", "tool": "email", "action": "send",
+         "hardness": "hard", "evaluator": {"type": "input", "input_key": "classifier_flag"}}
+      ]}},
+      "tool": "email",
+      "action": "send",
+      "params": {"recipient": "someone@example.invalid"},
+      "criteria_inputs": {},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["flagged_by_classifier"], "soft_ids": []}
+    },
+    {
+      "id": "input_criterion_missing_soft_fails_open",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "flagged_by_classifier_advisory", "tool": "email", "action": "send",
+         "hardness": "soft", "evaluator": {"type": "input", "input_key": "classifier_flag"}}
+      ]}},
+      "tool": "email",
+      "action": "send",
+      "params": {"recipient": "someone@example.invalid"},
+      "criteria_inputs": {},
+      "expect": {"decision": "allow", "reason": "no_hard_criteria_triggered", "hard_ids": [], "soft_ids": []}
+    },
+    {
+      "id": "hybrid_compute_fires_short_circuits_llm",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "hybrid_spend_guard", "tool": "payment", "action": "transfer",
+         "hardness": "hard",
+         "evaluator": {"type": "hybrid",
+                       "compute": {"formula": "amount > 10000"},
+                       "llm": {"prompt": "Is this transfer suspicious?"}}}
+      ]}},
+      "tool": "payment",
+      "action": "transfer",
+      "params": {"amount": 50000},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["hybrid_spend_guard"], "soft_ids": []}
+    },
+    {
+      "id": "multiple_hard_criteria_all_listed_and_sorted",
+      "policy": {"action_governance": {"criteria": [
+        {"criterion_id": "z_last_alphabetically", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "true"}},
+        {"criterion_id": "a_first_alphabetically", "tool": "terminal", "action": "execute",
+         "hardness": "hard", "evaluator": {"type": "compute", "formula": "true"}}
+      ]}},
+      "tool": "terminal",
+      "action": "execute",
+      "params": {"command": "ls"},
+      "expect": {"decision": "hitl", "reason": "hard_criterion_triggered",
+                 "hard_ids": ["a_first_alphabetically", "z_last_alphabetically"], "soft_ids": []}
+    }
+  ]
+}
