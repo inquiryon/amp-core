@@ -13,7 +13,7 @@ dependencies = []
 
 [project.optional-dependencies]
 schema = ["jsonschema>=4.0"]
-dev = ["pytest>=7", "jsonschema>=4.0"]
+dev = ["pytest>=7", "jsonschema>=4.0", "tomli>=2.0; python_version<'3.11'"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

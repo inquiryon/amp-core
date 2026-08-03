@@ -40,7 +40,11 @@ def test_no_forbidden_imports():
 
 def test_core_has_no_runtime_dependencies():
     # pyproject dependencies must stay empty — adapters live in other packages.
-    import tomllib
+    # tomllib is stdlib-only from Python 3.11; the CI matrix also runs 3.10.
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        import tomli as tomllib
     with open(os.path.join(SRC, '..', '..', 'pyproject.toml'), 'rb') as f:
         pyproject = tomllib.load(f)
     assert pyproject['project']['dependencies'] == []
