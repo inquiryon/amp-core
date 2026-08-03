@@ -4,7 +4,7 @@ Enterprise modules, web frameworks, databases, or SaaS infrastructure."""
 import ast
 import os
 
-SRC = os.path.join(os.path.dirname(__file__), '..', 'src', 'amp_core')
+SRC = os.path.join(os.path.dirname(__file__), '..', 'src', 'inquiryon_amp_core')
 
 FORBIDDEN_PREFIXES = (
     'flask', 'mysql', 'sqlalchemy', 'alembic', 'requests', 'stripe',

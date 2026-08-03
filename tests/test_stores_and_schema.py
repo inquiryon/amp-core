@@ -4,8 +4,8 @@ components)."""
 
 import pytest
 
-from amp_core import FilePolicyStore, InMemoryPolicyStore, run_eval_policy
-from amp_core.schema import validate
+from inquiryon_amp_core import FilePolicyStore, InMemoryPolicyStore, run_eval_policy
+from inquiryon_amp_core.schema import validate
 
 POLICY = {
     'policy_id': 'invoice-governance',

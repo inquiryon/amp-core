@@ -8,27 +8,27 @@ Community Edition, one Enterprise adapter, and existing integration behavior.
 
 ## What's here
 
-- `amp_core.evaluator` — deterministic policy evaluation (`run_eval_policy`):
+- `inquiryon_amp_core.evaluator` — deterministic policy evaluation (`run_eval_policy`):
   criterion matching, hard/soft aggregation, `block_when`/`allow_when`
   semantics, input-signal criteria, and fail-closed fallbacks.
-- `amp_core.expr` — a constrained AST interpreter for compute formulas.
+- `inquiryon_amp_core.expr` — a constrained AST interpreter for compute formulas.
   Policy expressions never execute arbitrary Python; escapes and resource
   abuse are rejected, and hard criteria fail closed to human review.
-- `amp_core.providers` — the `DecisionProvider` contract plus Community
+- `inquiryon_amp_core.providers` — the `DecisionProvider` contract plus Community
   implementations. Safety invariants are enforced in the workflow: providers
   cannot override non-overridable policy outcomes, and provider failure,
   timeout, or invalid output falls back to `require_human`.
-- `amp_core.stores` — `PolicyStore` adapters: in-memory and file-backed.
-- `amp_core.interfaces` — extension points (audit sink, clock, ids,
+- `inquiryon_amp_core.stores` — `PolicyStore` adapters: in-memory and file-backed.
+- `inquiryon_amp_core.interfaces` — extension points (audit sink, clock, ids,
   workitem store, identity, notification, agent callback).
-- `amp_core/contracts/schemas/v0.json` — language-neutral JSON Schemas for
+- `inquiryon_amp_core/contracts/schemas/v0.json` — language-neutral JSON Schemas for
   `Policy`, `EvaluationRequest`, `CriterionResult`, `EvaluationDecision`,
   `HITLRequest`, `HITLDecision`, `AuditEvent`, error envelope, pagination.
 
 ## Quick start
 
 ```python
-from amp_core import InMemoryPolicyStore, run_eval_policy
+from inquiryon_amp_core import InMemoryPolicyStore, run_eval_policy
 
 store = InMemoryPolicyStore()
 store.put_policy('invoice-governance', {

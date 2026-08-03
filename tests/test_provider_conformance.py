@@ -1,19 +1,19 @@
 """Decision-provider conformance (OSS-002): timeout, invalid output, safe
 fallback, and non-overridable policy outcomes.
 
-The fixed policy and request builder live in ``amp_core.conformance`` so a
+The fixed policy and request builder live in ``inquiryon_amp_core.conformance`` so a
 private Enterprise provider suite (OSS-008) can evaluate against the same
 fixture instead of redefining an equivalent one."""
 
 import time
 
-from amp_core import (
+from inquiryon_amp_core import (
     DecisionResult,
     HumanReviewProvider,
     StaticPolicyProvider,
     decide_with_safety,
 )
-from amp_core.conformance import HARD_POLICY, make_request
+from inquiryon_amp_core.conformance import HARD_POLICY, make_request
 
 assert HARD_POLICY  # re-exported for suites that want the raw policy too
 

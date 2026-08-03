@@ -7,7 +7,7 @@ approved v0 change is documented. Approved v0 changes:
 - Decision vocabulary: legacy ``hitl`` is spelled ``require_human`` in v0
   contracts (pure rename; parity harness maps between them).
 - Formula execution uses the constrained AST interpreter in
-  :mod:`amp_core.expr.engine` instead of Python ``eval()``. The observable
+  :mod:`inquiryon_amp_core.expr.engine` instead of Python ``eval()``. The observable
   formula language (pre-seeded param defaults, ``lockdown``/``get`` helpers,
   allow-listed builtins, ``true/false/null`` aliases) is preserved.
 - Hard-criterion triggers still route to ``require_human`` — the roadmap's

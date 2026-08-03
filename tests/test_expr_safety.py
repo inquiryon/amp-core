@@ -7,8 +7,8 @@ a hard criterion must fail closed (require_human), never crash or allow.
 
 import pytest
 
-from amp_core import run_eval_policy
-from amp_core.expr.engine import (
+from inquiryon_amp_core import run_eval_policy
+from inquiryon_amp_core.expr.engine import (
     FormulaError,
     FormulaNameError,
     FormulaResourceError,
