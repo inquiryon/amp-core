@@ -1,4 +1,8 @@
-# Reviewed hygiene exceptions (see oss-release/hygiene/check_release_hygiene.sh)
+# Reviewed hygiene exceptions
 # The architecture test must name forbidden imports in order to ban them.
 H6 tests/test_architecture_rules.py
+# The approved public security contact (OSS-001 D5, 2026-07-27) appears in
+# these files intentionally — not a leaked internal reference.
+H4 SECURITY.md
+H4 CODE_OF_CONDUCT.md
 H4 scripts/check_release_hygiene.sh
