@@ -1,8 +1,8 @@
 """Deterministic policy evaluation extracted from the AMP monolith (OSS-003).
 
-Behavior is characterized by ``oss-release/phase-0/fixtures`` and must stay
-in parity with the legacy ``_run_eval_policy`` except where an approved v0
-change is documented. Approved v0 changes:
+Behavior is characterized by ``tests/fixtures/eval_policy_cases.json`` and
+must stay in parity with the legacy ``_run_eval_policy`` except where an
+approved v0 change is documented. Approved v0 changes:
 
 - Decision vocabulary: legacy ``hitl`` is spelled ``require_human`` in v0
   contracts (pure rename; parity harness maps between them).
