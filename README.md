@@ -6,6 +6,21 @@ policy evaluation, and transport-neutral decision-provider contracts.
 **Status: experimental `v0`.** Contracts may change until validated by the
 Community Edition, one Enterprise adapter, and existing integration behavior.
 
+## Installation
+
+**Not yet published to PyPI** — install from a local clone for now:
+
+```bash
+git clone https://github.com/inquiryon/amp-core.git
+pip install -e ./amp-core
+# or, for full JSON Schema validation (see "Quick start" below):
+pip install -e "./amp-core[schema]"
+```
+
+Once published, this collapses to `pip install inquiryon-amp-core` (or
+`inquiryon-amp-core[schema]`). The "Quick start" example below assumes this
+step is already done.
+
 ## What's here
 
 - `inquiryon_amp_core.evaluator` — deterministic policy evaluation (`run_eval_policy`):
