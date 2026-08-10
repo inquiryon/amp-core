@@ -12,6 +12,11 @@ Community Edition, one Enterprise adapter, and existing integration behavior.
 
 ```bash
 git clone https://github.com/inquiryon/amp-core.git
+
+# Optional but recommended — keeps this off your system/global Python.
+# Skip if you already have your own environment set up.
+python3 -m venv .venv && source .venv/bin/activate
+
 pip install -e ./amp-core
 # or, for full JSON Schema validation (see "Quick start" below):
 pip install -e "./amp-core[schema]"
