@@ -1,10 +1,7 @@
-# inquiryon-amp-core (experimental v0)
+# inquiryon-amp-core
 
 Public governance core for AMP: versioned policy schema, deterministic
 policy evaluation, and transport-neutral decision-provider contracts.
-
-**Status: experimental `v0`.** Contracts may change until validated by the
-Community Edition, one Enterprise adapter, and existing integration behavior.
 
 ## Installation
 
