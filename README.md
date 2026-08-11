@@ -3,7 +3,20 @@
 Public governance core for AMP: versioned policy schema, deterministic
 policy evaluation, and transport-neutral decision-provider contracts.
 
-## Installation
+## Get Started
+
+Most users shouldn't install amp-core directly — start with
+**[amp-community](https://github.com/inquiryon/amp-community)**, which
+pulls amp-core in as a dependency and adds the HITL review workflow,
+audit trail, REST API, and operator UI on top of it. Its README covers
+installation and a full working walkthrough.
+
+### Installing amp-core directly
+
+Install this package on its own only if you're building a governance
+service without amp-community — for example, embedding just the policy
+evaluator in another system, or implementing a custom `DecisionProvider`
+for a different application boundary.
 
 **Not yet published to PyPI** — install from a local clone for now:
 
@@ -15,15 +28,16 @@ git clone https://github.com/inquiryon/amp-core.git
 python3 -m venv .venv && source .venv/bin/activate
 
 pip install -e ./amp-core
-# or, for full JSON Schema validation (see "Quick start" below):
+# or, for full JSON Schema validation (see "Python API Example" below):
 pip install -e "./amp-core[schema]"
 ```
 
 Once published, this collapses to `pip install inquiryon-amp-core` (or
-`inquiryon-amp-core[schema]`). The "Quick start" example below assumes this
-step is already done.
+`inquiryon-amp-core[schema]`).
 
-## What's here
+## How it works
+
+### AMP Core Components
 
 - `inquiryon_amp_core.evaluator` — deterministic policy evaluation (`run_eval_policy`):
   criterion matching, hard/soft aggregation, `block_when`/`allow_when`
@@ -42,7 +56,7 @@ step is already done.
   `Policy`, `EvaluationRequest`, `CriterionResult`, `EvaluationDecision`,
   `HITLRequest`, `HITLDecision`, `AuditEvent`, error envelope, pagination.
 
-## Quick start
+### Python API Example
 
 ```python
 from inquiryon_amp_core import InMemoryPolicyStore, run_eval_policy
@@ -66,7 +80,7 @@ pluggable `CriterionEvaluator`; without one they resolve to the criterion's
 fallback (hard criteria fail closed). Install the `schema` extra for full
 JSON Schema validation.
 
-## Design rules
+### Design rules
 
 - No Flask, no database drivers, no SaaS identity, billing, analytics, or
   RLHF concepts — enforced by `tests/test_architecture_rules.py`.
