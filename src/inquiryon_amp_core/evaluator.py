@@ -142,6 +142,26 @@ def _run_llm_evaluator(criterion: dict, params: Mapping, prompt: str,
         return bool(fallback), f'llm_error: {exc}'
 
 
+def _hybrid_command_missing(criterion: dict, params: Mapping) -> bool:
+    """Conservatively skip the LLM half for command-oriented hybrids only when
+    no command was supplied at all.
+
+    This targets criteria written for shell-command inspection that were
+    matched against non-shell exec actions such as ``web_search``. It does not
+    change fail-closed behavior for provider faults or for criteria that depend
+    on other inputs.
+    """
+    command = str(dict(params or {}).get('command') or '').strip()
+    if command:
+        return False
+    evaluator = criterion.get('evaluator', {}) if isinstance(criterion.get('evaluator'), dict) else {}
+    compute_eval = evaluator.get('compute', {}) or {}
+    llm_eval = evaluator.get('llm', {}) or {}
+    compute_formula = str(compute_eval.get('formula') or '').lower()
+    llm_prompt = str(llm_eval.get('prompt') or '').lower()
+    return 'command' in compute_formula or 'command' in llm_prompt
+
+
 def evaluate_single_criterion(criterion: dict, params: Mapping,
                               criteria_inputs: Optional[Mapping] = None,
                               llm_evaluator: Optional[CriterionEvaluatorFn] = None,
@@ -165,6 +185,8 @@ def evaluate_single_criterion(criterion: dict, params: Mapping,
                                compute_eval.get('fallback_result', outer_fallback), limits)
         if c_fired:
             condition_met, reason = True, 'compute_triggered'
+        elif _hybrid_command_missing(criterion, params):
+            condition_met, reason = False, 'hybrid_command_missing'
         else:
             condition_met, reason = _run_llm_evaluator(
                 criterion, params, llm_eval.get('prompt', ''),
