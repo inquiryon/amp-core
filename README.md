@@ -1,6 +1,6 @@
 # inquiryon-amp-core
 
-Public governance core for AMP: versioned policy schema, deterministic
+Public governance core for AMP (Autonomous Multi-agent Platform): versioned policy schema, deterministic
 policy evaluation, and transport-neutral decision-provider contracts.
 
 ## Get Started
@@ -18,22 +18,17 @@ service without amp-community — for example, embedding just the policy
 evaluator in another system, or implementing a custom `DecisionProvider`
 for a different application boundary.
 
-**Not yet published to PyPI** — install from a local clone for now:
-
 ```bash
-git clone https://github.com/inquiryon/amp-core.git
-
 # Optional but recommended — keeps this off your system/global Python.
-# Skip if you already have your own environment set up.
 python3 -m venv .venv && source .venv/bin/activate
 
-pip install -e ./amp-core
+pip install inquiryon-amp-core
 # or, for full JSON Schema validation (see "Python API Example" below):
-pip install -e "./amp-core[schema]"
+pip install "inquiryon-amp-core[schema]"
 ```
 
-Once published, this collapses to `pip install inquiryon-amp-core` (or
-`inquiryon-amp-core[schema]`).
+To work from source instead: `git clone https://github.com/inquiryon/amp-core.git`
+then `pip install -e ./amp-core`.
 
 ## How it works
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "inquiryon-amp-core"
-version = "0.0.1"
+version = "0.1.0"
 description = "AMP governance core: policy schema, deterministic evaluation, decision-provider contracts (experimental v0)"
 readme = "README.md"
 license = {text = "Apache-2.0"}

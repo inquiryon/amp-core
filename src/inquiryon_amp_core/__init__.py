@@ -40,7 +40,7 @@ from .providers import (
 )
 from .stores import FilePolicyStore, InMemoryPolicyStore, PolicyStore
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 # `conformance` is intentionally not imported here (it is test-support, not
 # runtime code) — import it explicitly as `inquiryon_amp_core.conformance`
